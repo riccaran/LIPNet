@@ -1,19 +1,18 @@
 import argparse
 import time
-from pathlib import Path
+# from pathlib import Path
 import torch
-import h5py
+# import h5py
 from transformers import T5EncoderModel, T5Tokenizer
 import gc
 import re 
 import time
 from Bio import SeqIO
-import sys
 
-def save_h5(file_path,dictionary):
-    with h5py.File(file_path,'w') as f:
-        for key,value in dictionary.items():
-            f.create_dataset(key,data=value)
+# def save_h5(file_path,dictionary):
+#     with h5py.File(file_path,'w') as f:
+#         for key,value in dictionary.items():
+#             f.create_dataset(key,data=value)
 
 def read_fasta( fasta_path ):
     '''
@@ -38,19 +37,17 @@ def read_fasta( fasta_path ):
     return sequences
 
 def get_ProtT5_UniRef50_embedding(fasta_path):
-    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-    print(device)
-    tokenizer = T5Tokenizer.from_pretrained('Rostlab/prot_t5_xl_half_uniref50-enc', do_lower_case=False)
-    model = T5EncoderModel.from_pretrained("Rostlab/prot_t5_xl_half_uniref50-enc").to(device)
-    model.full() if device=='cpu' else model.half()
-
+    device = 'cpu'
+    tokenizer = T5Tokenizer.from_pretrained('/mnt/db/caid/prot_t5_xl_uniref50', do_lower_case=False)
+    model = T5EncoderModel.from_pretrained('/mnt/db/caid/prot_t5_xl_uniref50')
     model = model.eval()
 
   
     with open(fasta_path,"r", encoding="utf-8") as handle:
 
         records = list(SeqIO.parse(handle, "fasta"))
-                 
+        print('this is records: ')
+        print(records)  
         single_dictionary = {}
         for sliced_rec in [records[i:i+1] for i in range(0, len(records), 1)]:
             gc.collect()
@@ -74,14 +71,8 @@ def get_ProtT5_UniRef50_embedding(fasta_path):
            
             for i,embed in enumerate(numpy_embedding):
                 new_embed=embed[:lens[i],:]
-                # for outputting residue level embedding
-                # file.create_dataset(keys[i],data=new_embed)
                 single_dictionary[keys[i]] = new_embed
 
-                
-    print(single_dictionary)
-    print(single_dictionary.keys())
-    print(len(single_dictionary))
     return single_dictionary
            
             
@@ -89,11 +80,7 @@ def get_ProtT5_UniRef50_embedding(fasta_path):
 
 
 if __name__ == '__main__':
-    # seq_dict=read_fasta('./1000.fasta')
     parser=argparse.ArgumentParser()
     parser.add_argument('--input')
-    parser.add_argument('--output')
-    parser.add_argument('--level', help='the level of aggregation: must be equat to residue or protein')
     args=parser.parse_args()
-    # seq_dict   = sorted( seq_dict.items(), key=lambda kv: len( seq_dict[kv[0]] ), reverse=True )
     get_ProtT5_UniRef50_embedding(fasta_path=args.input)
