@@ -84,7 +84,7 @@ def main():
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(random_seed)
 
-    # Final parameters
+    # Model parameters
     lr = 1e-5
     weight_decay = 1e-3
     channels = 512
@@ -94,9 +94,9 @@ def main():
 
     #### Build the input ####
 
-    input = args.input_file
+    input_prots = args.input_file
 
-    with open(input, "r") as f:
+    with open(input_prots, "r") as f:
         lines = f.read().splitlines()
 
     ind = 0
