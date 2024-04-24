@@ -10,50 +10,9 @@ import random
 import numpy as np
 import pandas as pd
 from cnn_architecture import CNN
-
+import torch
 import torch.optim as optim
-
-#### Set parameters ####
-
-# Random seeds
-random_seed = 4
-
-torch.manual_seed(random_seed)
-np.random.seed(random_seed)
-random.seed(random_seed)
-if torch.cuda.is_available():
-    torch.cuda.manual_seed_all(random_seed)
-
-# Final parameters
-lr = 1e-5
-weight_decay = 1e-3
-channels = 512
-dropout = 0.75
-sequence_cut = 1000
-batch_size = 16
-
-#### Build the input ####
-
-input = "input.fasta"
-
-with open(input, "r") as f:
-    lines = f.read().splitlines()
-
-ind = 0
-input_split = dict() # Keys are porteins UniProt's IDs and values are string amino acid sequences
-
-while ind < len(lines):
-    input_split[lines[ind][1:]] = (lines[ind + 1])
-    ind += 2
-
-#### Embeddings calculation here
-#### The final "embeddings_dict" file would a dictionary in which keys are porteins UniProt's IDs and values are amino acid-based embeddings
-
-#### Making the output folder
-output_folder = "disorder"
-
-if not os.path.exists(output_folder):
-    os.makedirs(output_folder)
+import torch.nn as nn
 
 #### Use the model ####
 
@@ -103,34 +62,80 @@ def making_loader(embeddings_dict, size, batch_size):
 
 
 
-# Model loading
-model = CNN(channels = channels , dropout = dropout)
-optimizer = optim.AdamW(model.parameters(), lr = lr , weight_decay = weight_decay )
 
-checkpoint = torch.load('cnn_model.pth')
-model.load_state_dict(checkpoint['model_state_dict'])
-optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
-# Model evaluation
-model.eval()
+def main():
+    #### Set parameters ####
 
-uniprots_batches, test = making_loader(X_test, sequence_cut, batch_size) # 1000 is the limit for cutting sequences
+    # Random seeds
+    random_seed = 4
 
-predictions_proba = dict()
+    torch.manual_seed(random_seed)
+    np.random.seed(random_seed)
+    random.seed(random_seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(random_seed)
 
-with torch.no_grad():
-    for uniprots_batches, (inputs, mask) in zip(uniprots_batches, test):
-        outputs = model(inputs, mask)
-        outputs = torch.sigmoid(outputs)
-        for example in range(batch_size):
-            predictions_proba[uniprots_batches[example]] = outputs[examples, :]
+    # Final parameters
+    lr = 1e-5
+    weight_decay = 1e-3
+    channels = 512
+    dropout = 0.75
+    sequence_cut = 1000
+    batch_size = 16
 
-# Scores saving
-for uniprot, scores in predictions_proba.items():
-    sequence = input_split[uniprot][:sequence_cut]
-    prot_scores = zip(sequence, scores)
-    prot_scores[2] = np.nan
-    df.to_csv("{}/{}.caid".forat(output_folder, uniprot), sep='\t', header = false, index=False)
+    #### Build the input ####
 
-#if __name__ == "__main__":
-#    pass
+    input = "input.fasta"
+
+    with open(input, "r") as f:
+        lines = f.read().splitlines()
+
+    ind = 0
+    input_split = dict() # Keys are porteins UniProt's IDs and values are string amino acid sequences
+
+    while ind < len(lines):
+        input_split[lines[ind][1:]] = (lines[ind + 1])
+        ind += 2
+
+    #### Embeddings calculation here
+    #### The final "embeddings_dict" file would a dictionary in which keys are porteins UniProt's IDs and values are amino acid-based embeddings
+
+    #### Making the output folder
+    output_folder = "disorder"
+
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+        # Model loading
+    model = CNN(channels = channels , dropout = dropout)
+    optimizer = optim.AdamW(model.parameters(), lr = lr , weight_decay = weight_decay )
+
+    checkpoint = torch.load('cnn_model.pth')
+    model.load_state_dict(checkpoint['model_state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+
+    # Model evaluation
+    model.eval()
+
+    uniprots_batches, test = making_loader(X_test, sequence_cut, batch_size) # 1000 is the limit for cutting sequences
+
+    predictions_proba = dict()
+
+    with torch.no_grad():
+        for uniprots_batches, (inputs, mask) in zip(uniprots_batches, test):
+            outputs = model(inputs, mask)
+            outputs = torch.sigmoid(outputs)
+            for example in range(batch_size):
+                predictions_proba[uniprots_batches[example]] = outputs[examples, :]
+
+    # Scores saving
+    for uniprot, scores in predictions_proba.items():
+        sequence = input_split[uniprot][:sequence_cut]
+        prot_scores = zip(sequence, scores)
+        prot_scores[2] = np.nan
+        df.to_csv("{}/{}.caid".forat(output_folder, uniprot), sep='\t', header = False, index=False)
+
+
+if __name__ == "__main__":
+    main()
