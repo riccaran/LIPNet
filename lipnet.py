@@ -6,13 +6,16 @@
 # Libraries loading
 import os
 import random
-
+import argparse
 import numpy as np
 import pandas as pd
-from cnn_architecture import CNN
+
 import torch
 import torch.optim as optim
 import torch.nn as nn
+
+from cnn_architecture import CNN
+from t5 import get_ProtT5_UniRef50_embedding
 
 #### Use the model ####
 
@@ -60,11 +63,16 @@ def making_loader(embeddings_dict, size, batch_size):
     loader_set = [(X, mask) for X, mask in zip(X_batches, mask_batches)]
     return uniprots_batches, loader_set
 
-
+def parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--input_file',help='path to the input fasta file')
+    args = parser.parse_args()
+    return args
 
 
 
 def main():
+    args = parser()
     #### Set parameters ####
 
     # Random seeds
@@ -86,7 +94,7 @@ def main():
 
     #### Build the input ####
 
-    input = "input.fasta"
+    input = args.input_file
 
     with open(input, "r") as f:
         lines = f.read().splitlines()
@@ -99,10 +107,11 @@ def main():
         ind += 2
 
     #### Embeddings calculation here
-    #### The final "embeddings_dict" file would a dictionary in which keys are porteins UniProt's IDs and values are amino acid-based embeddings
-
+    # TODO: Riccardo you have to load your embeddings dict here instead. Just comment my code 
+    # embeddings_dict = load ...
+    embeddings_dict = get_ProtT5_UniRef50_embedding(fasta_path=args.input_file)
     #### Making the output folder
-    output_folder = "disorder"
+    output_folder = "outputs"
 
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
@@ -118,7 +127,7 @@ def main():
     # Model evaluation
     model.eval()
 
-    uniprots_batches, test = making_loader(X_test, sequence_cut, batch_size) # 1000 is the limit for cutting sequences
+    uniprots_batches, test = making_loader(embeddings_dict, sequence_cut, batch_size) # 1000 is the limit for cutting sequences
 
     predictions_proba = dict()
 
@@ -134,8 +143,10 @@ def main():
         sequence = input_split[uniprot][:sequence_cut]
         prot_scores = zip(sequence, scores)
         prot_scores[2] = np.nan
-        df.to_csv("{}/{}.caid".forat(output_folder, uniprot), sep='\t', header = False, index=False)
+        df.to_csv(os.path.join('outputs',f'{uniprot}.caid'), sep='\t', header = False, index=False)
 
 
 if __name__ == "__main__":
     main()
+    # to run do : 
+    # python3 lipnet.py --input_file path/to/the/file
