@@ -1,5 +1,0 @@
-# Python==3.8.12
-
-# Required libraries
-torch==1.13.1+cu117
-numpy==1.21.5

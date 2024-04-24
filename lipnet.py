@@ -68,6 +68,7 @@ def making_loader(embeddings_dict, size, batch_size):
 def parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_file',help='path to the input fasta file')
+    parser.add_argument('--embedding_mode',help='could be load or compute. if compute, computes the embeddings. if load, you have to load the embeddings h5 file')
     args = parser.parse_args()
     return args
 
@@ -109,9 +110,12 @@ def main():
         ind += 2
 
     #### Embeddings calculation here
-    # TODO: Riccardo you have to load your embeddings dict here instead. Just comment my code 
-    # embeddings_dict = load ...
-    embeddings_dict = get_ProtT5_UniRef50_embedding(fasta_path=args.input_file)
+    if args.embedding_mode == 'load':
+        # TODO: Riccardo you have to load your embeddings dict here instead. Just comment my code 
+        # embeddings_dict = load ...
+        pass 
+    elif args.embedding_mode == 'compute':
+        embeddings_dict = get_ProtT5_UniRef50_embedding(fasta_path=args.input_file)
     #### Making the output folder
     output_folder = "outputs"
 
@@ -138,17 +142,17 @@ def main():
             outputs = model(inputs, mask)
             outputs = torch.sigmoid(outputs)
             for example in range(batch_size):
-                predictions_proba[uniprots_batches[example]] = outputs[examples, :]
+                predictions_proba[uniprots_batches[example]] = outputs[examples, :] #TODO
 
     # Scores saving
     for uniprot, scores in predictions_proba.items():
         sequence = input_split[uniprot][:sequence_cut]
         prot_scores = zip(sequence, scores)
         prot_scores[2] = np.nan
-        df.to_csv(os.path.join('outputs',f'{uniprot}.caid'), sep='\t', header = False, index=False)
+        df.to_csv(os.path.join('outputs',f'{uniprot}.caid'), sep='\t', header = False, index=False) #TODO
 
 
 if __name__ == "__main__":
     main()
     # to run do : 
-    # python3 lipnet.py --input_file path/to/the/file
+    # python3 lipnet.py --input_file path/to/the/file --embedding_mode
