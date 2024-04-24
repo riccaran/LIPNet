@@ -15,6 +15,7 @@ import pandas as pd
 import torch
 import torch.optim as optim
 import torch.nn as nn
+from torch.nn.utils.rnn import pad_sequence
 
 from cnn_architecture import CNN
 from t5 import get_ProtT5_UniRef50_embedding
@@ -142,14 +143,14 @@ def main():
             outputs = model(inputs, mask)
             outputs = torch.sigmoid(outputs)
             for example in range(batch_size):
-                predictions_proba[uniprots_batches[example]] = outputs[examples, :] #TODO
+                predictions_proba[uniprots_batches[example]] = outputs[example, :] #TODO
 
     # Scores saving
     for uniprot, scores in predictions_proba.items():
         sequence = input_split[uniprot][:sequence_cut]
-        prot_scores = zip(sequence, scores)
+        prot_scores = pd.DataFrame(zip(sequence, scores))
         prot_scores[2] = np.nan
-        df.to_csv(os.path.join('outputs',f'{uniprot}.caid'), sep='\t', header = False, index=False) #TODO
+        prot_scores.to_csv(os.path.join('outputs',f'{uniprot}.caid'), sep='\t', header = False, index=False) #TODO
 
 
 if __name__ == "__main__":
