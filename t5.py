@@ -36,18 +36,17 @@ def read_fasta( fasta_path ):
                 
     return sequences
 
-def get_ProtT5_UniRef50_embedding(fasta_path):
+def get_ProtT5_UniRef50_embedding(fasta_path,model_path):
     device = 'cpu'
-    tokenizer = T5Tokenizer.from_pretrained('/mnt/db/caid/prot_t5_xl_uniref50', do_lower_case=False)
-    model = T5EncoderModel.from_pretrained('/mnt/db/caid/prot_t5_xl_uniref50')
+    tokenizer = T5Tokenizer.from_pretrained(model_path, do_lower_case=False)
+    model = T5EncoderModel.from_pretrained(model_path)
     model = model.eval()
 
   
     with open(fasta_path,"r", encoding="utf-8") as handle:
 
         records = list(SeqIO.parse(handle, "fasta"))
-        print('this is records: ')
-        print(records)  
+      
         single_dictionary = {}
         for sliced_rec in [records[i:i+1] for i in range(0, len(records), 1)]:
             gc.collect()
@@ -80,7 +79,8 @@ def get_ProtT5_UniRef50_embedding(fasta_path):
 
 
 if __name__ == '__main__':
-    parser=argparse.ArgumentParser()
-    parser.add_argument('--input')
-    args=parser.parse_args()
-    get_ProtT5_UniRef50_embedding(fasta_path=args.input)
+    # parser=argparse.ArgumentParser()
+    # parser.add_argument('--input')
+    # args=parser.parse_args()
+    # get_ProtT5_UniRef50_embedding(fasta_path=args.input)
+    pass 

@@ -25,7 +25,7 @@ from t5 import get_ProtT5_UniRef50_embedding
 # Padding, batch making and loader making
 def pad_and_batch_sequences(embeddings_dict, size, batch_size):
     # splitting
-    uniprots = embeddings_dict.keys()
+    uniprots = list(embeddings_dict.keys())
     X = embeddings_dict.values()
     
     # making masks
@@ -69,7 +69,8 @@ def making_loader(embeddings_dict, size, batch_size):
 def parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_file',help='path to the input fasta file')
-    parser.add_argument('--embedding_mode',help='could be load or compute. if compute, computes the embeddings. if load, you have to load the embeddings h5 file')
+    parser.add_argument('--embedding_mode',help='could be "load" or "compute". if "compute", computes the embeddings. if "load", you have to load the embeddings h5 file')
+    parser.add_argument('--prott5_model_path', help='Directory to the cached model path.')
     args = parser.parse_args()
     return args
 
@@ -112,11 +113,11 @@ def main():
 
     #### Embeddings calculation here
     if args.embedding_mode == 'load':
-        # TODO: Riccardo you have to load your embeddings dict here instead. Just comment my code 
+        # TODO
         # embeddings_dict = load ...
         pass 
     elif args.embedding_mode == 'compute':
-        embeddings_dict = get_ProtT5_UniRef50_embedding(fasta_path=args.input_file)
+        embeddings_dict = get_ProtT5_UniRef50_embedding(fasta_path=args.input_file , model_path = args.prott5_model_path)
     #### Making the output folder
     output_folder = "outputs"
 
@@ -135,25 +136,29 @@ def main():
     model.eval()
 
     uniprots_batches, test = making_loader(embeddings_dict, sequence_cut, batch_size) # 1000 is the limit for cutting sequences
-
+ 
     predictions_proba = dict()
 
     with torch.no_grad():
-        for uniprots_batches, (inputs, mask) in zip(uniprots_batches, test):
+        for uniprots_batch, (inputs, mask) in zip(uniprots_batches, test):
             outputs = model(inputs, mask)
             outputs = torch.sigmoid(outputs)
-            for example in range(batch_size):
-                predictions_proba[uniprots_batches[example]] = outputs[example, :] #TODO
+            outputs = outputs.detach().numpy()
+            for example in range(len(uniprots_batches)):
+                predictions_proba[uniprots_batch[example]] = outputs[example, :] #TODO
 
-    # Scores saving
-    for uniprot, scores in predictions_proba.items():
-        sequence = input_split[uniprot][:sequence_cut]
-        prot_scores = pd.DataFrame(zip(sequence, scores))
-        prot_scores[2] = np.nan
-        prot_scores.to_csv(os.path.join('outputs',f'{uniprot}.caid'), sep='\t', header = False, index=False) #TODO
+    protein_id = list(predictions_proba.keys())[0]
+    scores = list(predictions_proba.values())[0]
+    sequence = input_split[protein_id][:sequence_cut]
+
+    with open(os.path.join(output_folder,f'{protein_id}.caid'),'w') as f:
+        f.write(f'>{protein_id}')
+        for i , (residue, score) in enumerate(zip(sequence,scores)):
+            f.write(f'{i+1}\t{residue}\t{score.item():.3f}\n')
 
 
 if __name__ == "__main__":
     main()
-    # to run do : 
-    # python3 lipnet.py --input_file path/to/the/file --embedding_mode
+
+
+
