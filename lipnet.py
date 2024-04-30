@@ -9,7 +9,7 @@ import os
 import random
 import sys
 
-
+from pathlib import Path
 import numpy as np
 import pandas as pd
 import torch
@@ -70,7 +70,8 @@ def parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_file',help='path to the input fasta file')
     parser.add_argument('--embedding_mode',help='could be "load" or "compute". if "compute", computes the embeddings. if "load", you have to load the embeddings h5 file')
-    parser.add_argument('--prott5_model_dir', help='Directory to the cached model path.')
+    # parser.add_argument('--prott5_model_dir', help='Directory to the cached model path.')
+    parser.add_argument('--embedding_path',help="path to the embedding file in npy format")
     args = parser.parse_args()
     return args
 
@@ -113,11 +114,15 @@ def main():
 
     #### Embeddings calculation here
     if args.embedding_mode == 'load':
-        # TODO
-        # embeddings_dict = load ...
-        pass 
+        prot_id = Path(args.embedding_path).stem
+        embedding = np.load(args.embedding_path)
+        embedding = embedding.reshape(embedding.shape[1], embedding.shape[2])
+        embeddings_dict = {prot_id:embedding}
+        
     elif args.embedding_mode == 'compute':
         embeddings_dict = get_ProtT5_UniRef50_embedding(fasta_path=args.input_file , model_dir = args.prott5_model_dir)
+
+
     #### Making the output folder
     output_folder = "outputs"
 
@@ -158,6 +163,7 @@ def main():
 
 
 if __name__ == "__main__":
+
     main()
 
 

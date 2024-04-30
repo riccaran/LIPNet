@@ -72,6 +72,8 @@ def get_ProtT5_UniRef50_embedding(fasta_path,model_dir):
             for i,embed in enumerate(numpy_embedding):
                 new_embed=embed[:lens[i],:]
                 single_dictionary[keys[i]] = new_embed
+                
+
 
     return single_dictionary
            
