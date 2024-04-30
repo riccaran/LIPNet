@@ -70,7 +70,7 @@ def parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_file',help='path to the input fasta file')
     parser.add_argument('--embedding_mode',help='could be "load" or "compute". if "compute", computes the embeddings. if "load", you have to load the embeddings h5 file')
-    parser.add_argument('--prott5_model_path', help='Directory to the cached model path.')
+    parser.add_argument('--prott5_model_dir', help='Directory to the cached model path.')
     args = parser.parse_args()
     return args
 
@@ -117,7 +117,7 @@ def main():
         # embeddings_dict = load ...
         pass 
     elif args.embedding_mode == 'compute':
-        embeddings_dict = get_ProtT5_UniRef50_embedding(fasta_path=args.input_file , model_path = args.prott5_model_path)
+        embeddings_dict = get_ProtT5_UniRef50_embedding(fasta_path=args.input_file , model_dir = args.prott5_model_dir)
     #### Making the output folder
     output_folder = "outputs"
 
