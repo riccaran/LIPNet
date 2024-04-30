@@ -152,7 +152,7 @@ def main():
     sequence = input_split[protein_id][:sequence_cut]
 
     with open(os.path.join(output_folder,f'{protein_id}.caid'),'w') as f:
-        f.write(f'>{protein_id}')
+        f.write(f'>{protein_id}\n')
         for i , (residue, score) in enumerate(zip(sequence,scores)):
             f.write(f'{i+1}\t{residue}\t{score.item():.3f}\n')
 
