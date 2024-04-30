@@ -1,4 +1,5 @@
 import argparse
+import os
 import time
 # from pathlib import Path
 import torch
@@ -36,10 +37,10 @@ def read_fasta( fasta_path ):
                 
     return sequences
 
-def get_ProtT5_UniRef50_embedding(fasta_path,model_path):
+def get_ProtT5_UniRef50_embedding(fasta_path,model_dir):
     device = 'cpu'
-    tokenizer = T5Tokenizer.from_pretrained(model_path, do_lower_case=False)
-    model = T5EncoderModel.from_pretrained(model_path)
+    tokenizer = T5Tokenizer.from_pretrained(os.path.join(model_dir,'prot_t5_xl_uniref50'), do_lower_case=False)
+    model = T5EncoderModel.from_pretrained(os.path.join(model_dir,'prot_t5_xl_uniref50'))
     model = model.eval()
 
   
