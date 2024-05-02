@@ -70,8 +70,6 @@ def parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_file',help='path to the input fasta file')
     parser.add_argument('--embedding_mode',help='could be "load" or "compute". if "compute", computes the embeddings. if "load", you have to load the embeddings h5 file')
-    # parser.add_argument('--prott5_model_dir', help='Directory to the cached model path.')
-    parser.add_argument('--embedding_path',help="path to the embedding file in npy format")
     args = parser.parse_args()
     return args
 
@@ -112,10 +110,11 @@ def main():
         input_split[lines[ind][1:]] = (lines[ind + 1])
         ind += 2
 
+    prot_id = Path(args.input_file).stem
     #### Embeddings calculation here
     if args.embedding_mode == 'load':
-        prot_id = Path(args.embedding_path).stem
-        embedding = np.load(args.embedding_path)
+        
+        embedding = np.load(f'/embeddings/{prot_id}.npy')
         embedding = embedding.reshape(embedding.shape[1], embedding.shape[2])
         embeddings_dict = {prot_id:embedding}
         
