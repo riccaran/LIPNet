@@ -95,7 +95,7 @@ def main():
     weight_decay = 1e-3
     channels = 512
     dropout = 0.75
-    sequence_cut = 1000
+    sequence_cut = 5000
     batch_size = 16
 
     #### Build the input ####
